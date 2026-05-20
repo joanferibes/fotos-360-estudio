@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#4A8A80">
+<title>Visor 360° — Joanfe Ribes Oficina Tècnica</title>
+
+<!-- Pannellum CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+
+<style>
+:root {
+  --azul: #4A8A80;
+  --verde: #7AADA3;
+  --gris-fondo: #f5f5f5;
+  --gris-medio: #e0e0e0;
+  --gris-texto: #555;
+  --texto: #222;
+  --rojo: #d9534f;
+  --sombra: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #000;
+  color: var(--texto);
+  font-size: 16px;
+}
+
+/* ===== Modo foto única — visor a pantalla completa ===== */
+.modo-foto {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #000;
+}
+
+#panorama {
+  width: 100%;
+  height: 100%;
+}
+
+.barra-superior {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.7), transparent);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  pointer-events: none;
+}
+
+.barra-superior .logo {
+  background: var(--azul);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  pointer-events: auto;
+}
+
+.barra-superior .info {
+  flex: 1;
+  font-size: 13px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.barra-superior .info .nombre {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 2px;
+  word-break: break-all;
+}
+
+.barra-superior .info .fecha {
+  font-size: 12px;
+  color: #ddd;
+}
+
+.cargando {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-align: center;
+  z-index: 5;
+}
+
+.cargando .spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255,255,255,0.2);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-align: center;
+  padding: 20px;
+  max-width: 90%;
+  z-index: 5;
+}
+
+.error h2 {
+  color: var(--rojo);
+  margin-bottom: 10px;
+}
+
+/* ===== Modo galería ===== */
+.modo-galeria {
+  min-height: 100vh;
+  background: var(--gris-fondo);
+  color: var(--texto);
+}
+
+.galeria-header {
+  background: var(--azul);
+  color: white;
+  padding: 20px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.galeria-header .logo-strip {
+  font-size: 11px;
+  opacity: 0.9;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.galeria-header h1 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.galeria-header .meta {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.galeria-contenido {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.galeria-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.galeria-item {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: var(--sombra);
+  transition: transform 0.15s;
+}
+
+.galeria-item:hover { transform: translateY(-2px); }
+.galeria-item:active { transform: scale(0.98); }
+
+.galeria-item .thumb {
+  width: 100%;
+  aspect-ratio: 2/1;
+  background: #222;
+  position: relative;
+  overflow: hidden;
+}
+
+.galeria-item .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.galeria-item .thumb .badge-360 {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(74,138,128,0.95);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.galeria-item .thumb .spinner-mini {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.galeria-item .info {
+  padding: 10px 12px;
+}
+
+.galeria-item .info .nombre {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--texto);
+  word-break: break-all;
+  line-height: 1.3;
+}
+
+.galeria-item .info .fecha {
+  font-size: 11px;
+  color: var(--gris-texto);
+  margin-top: 4px;
+}
+
+.galeria-vacia {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--gris-texto);
+}
+
+/* Botón cerrar galería cuando estás en visor */
+.btn-volver-galeria {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  z-index: 100;
+  display: none;
+}
+
+.btn-volver-galeria.visible { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Modo foto única -->
+<div id="modo-foto" class="modo-foto" style="display:none;">
+  <div class="barra-superior">
+    <div class="logo">JOANFE RIBES · OFICINA TÈCNICA</div>
+    <div class="info">
+      <div class="nombre" id="info-nombre"></div>
+      <div class="fecha" id="info-fecha"></div>
+    </div>
+  </div>
+  <div id="panorama"></div>
+  <div id="cargando" class="cargando">
+    <div class="spinner"></div>
+    <div>Cargando foto 360°...</div>
+  </div>
+  <div id="error" class="error" style="display:none;">
+    <h2>⚠️ Error</h2>
+    <p id="error-msg"></p>
+  </div>
+  <button class="btn-volver-galeria" id="btn-volver-galeria" onclick="volverAGaleria()">← Galería</button>
+</div>
+
+<!-- Modo galería -->
+<div id="modo-galeria" class="modo-galeria" style="display:none;">
+  <div class="galeria-header">
+    <div class="logo-strip">JOANFE RIBES · OFICINA TÈCNICA</div>
+    <h1 id="galeria-titulo">Galería 360°</h1>
+    <div class="meta" id="galeria-meta"></div>
+  </div>
+  <div class="galeria-contenido">
+    <div id="galeria-grid" class="galeria-grid">
+      <div class="galeria-vacia">
+        <div style="font-size:48px; margin-bottom:12px;">📷</div>
+        <div>Cargando fotos...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pannellum -->
+<script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+
+<script>
+// ============================================================================
+// CONFIGURACIÓN
+// ============================================================================
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwAElsuhzGrK-8KGsRqYgQoDofMh3CH8hinxApIyztZHz5-bV3guPTiBM_Gkzubpc2klw/exec';
+
+// ============================================================================
+// LECTURA DE PARÁMETROS URL
+// ============================================================================
+const params = new URLSearchParams(window.location.search);
+const fileId = params.get('id');
+const obraId = params.get('obra');
+const tomaDatos = params.get('toma');
+
+// ============================================================================
+// PUNTO DE ENTRADA
+// ============================================================================
+window.addEventListener('DOMContentLoaded', () => {
+  if (fileId) {
+    iniciarModoFoto(fileId);
+  } else if (obraId) {
+    iniciarModoGaleria('obra', obraId);
+  } else if (tomaDatos) {
+    iniciarModoGaleria('toma', tomaDatos);
+  } else {
+    mostrarErrorInicial();
+  }
+});
+
+function mostrarErrorInicial() {
+  document.body.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f5f5; padding:20px; text-align:center;">
+      <div style="background:white; padding:40px 30px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); max-width:400px;">
+        <div style="background:#4A8A80; color:white; display:inline-block; padding:6px 12px; border-radius:4px; font-size:11px; font-weight:600; letter-spacing:1px; margin-bottom:20px;">
+          JOANFE RIBES · OFICINA TÈCNICA
+        </div>
+        <h2 style="color:#222; margin-bottom:10px;">Visor 360°</h2>
+        <p style="color:#555; font-size:14px;">
+          Este enlace no contiene una foto válida. Asegúrate de que la URL incluye un parámetro <code style="background:#eee; padding:2px 6px; border-radius:3px;">?id=...</code>, <code style="background:#eee; padding:2px 6px; border-radius:3px;">?obra=...</code> o <code style="background:#eee; padding:2px 6px; border-radius:3px;">?toma=...</code>
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================================
+// MODO FOTO ÚNICA
+// ============================================================================
+
+async function iniciarModoFoto(id) {
+  document.getElementById('modo-foto').style.display = 'block';
+  
+  // Si venimos de una galería, mostrar botón volver
+  const ref = document.referrer;
+  if (ref && ref.includes('visor') && (ref.includes('obra=') || ref.includes('toma='))) {
+    document.getElementById('btn-volver-galeria').classList.add('visible');
+  }
+  
+  try {
+    // Pedir la foto al backend
+    const url = new URL(BACKEND_URL);
+    url.searchParams.set('action', 'getFoto360');
+    url.searchParams.set('fileId', id);
+    
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'Error desconocido');
+    
+    // Convertir base64 a blob URL
+    const blob = base64ABlob(data.contenidoBase64, 'image/jpeg');
+    const blobUrl = URL.createObjectURL(blob);
+    
+    // Mostrar info
+    if (data.nombre) document.getElementById('info-nombre').textContent = data.nombre;
+    if (data.fechaCreacion) {
+      const f = new Date(data.fechaCreacion);
+      document.getElementById('info-fecha').textContent = f.toLocaleString('es-ES', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+    
+    // Inicializar Pannellum
+    pannellum.viewer('panorama', {
+      type: 'equirectangular',
+      panorama: blobUrl,
+      autoLoad: true,
+      autoRotate: -2,
+      compass: true,
+      showControls: true,
+      hfov: 100,
+      minHfov: 50,
+      maxHfov: 120,
+      mouseZoom: true,
+      keyboardZoom: true,
+      onLoad: () => {
+        document.getElementById('cargando').style.display = 'none';
+      },
+      onError: (err) => {
+        document.getElementById('cargando').style.display = 'none';
+        mostrarError('Error al renderizar la foto: ' + err);
+      }
+    });
+    
+  } catch (err) {
+    mostrarError(err.message);
+  }
+}
+
+function mostrarError(msg) {
+  document.getElementById('cargando').style.display = 'none';
+  document.getElementById('error').style.display = 'block';
+  document.getElementById('error-msg').textContent = msg;
+}
+
+function volverAGaleria() {
+  window.history.back();
+}
+
+// ============================================================================
+// MODO GALERÍA
+// ============================================================================
+
+async function iniciarModoGaleria(tipo, identificador) {
+  document.getElementById('modo-galeria').style.display = 'block';
+  document.body.style.background = 'var(--gris-fondo)';
+  
+  try {
+    const url = new URL(BACKEND_URL);
+    url.searchParams.set('action', 'listarFotos360');
+    if (tipo === 'obra') {
+      url.searchParams.set('obraId', identificador);
+    } else {
+      url.searchParams.set('tomaDatos', identificador);
+    }
+    
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'Error desconocido');
+    
+    // Mostrar título
+    document.getElementById('galeria-titulo').textContent = data.titulo || 'Galería 360°';
+    const n = (data.fotos || []).length;
+    document.getElementById('galeria-meta').textContent = 
+      n === 0 ? 'Sin fotos' : (n + ' foto' + (n > 1 ? 's' : '') + ' 360°');
+    
+    renderGaleria(data.fotos || []);
+    
+  } catch (err) {
+    document.getElementById('galeria-grid').innerHTML = 
+      '<div class="galeria-vacia"><div style="font-size:48px; margin-bottom:12px;">⚠️</div>' +
+      '<div>Error: ' + escapeHtml(err.message) + '</div></div>';
+  }
+}
+
+function renderGaleria(fotos) {
+  const grid = document.getElementById('galeria-grid');
+  
+  if (fotos.length === 0) {
+    grid.innerHTML = '<div class="galeria-vacia"><div style="font-size:48px; margin-bottom:12px;">📷</div>' +
+      '<div>No hay fotos 360° todavía</div></div>';
+    return;
+  }
+  
+  grid.innerHTML = fotos.map(f => {
+    const fecha = f.fechaCreacion 
+      ? new Date(f.fechaCreacion).toLocaleString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
+      : '';
+    return `
+      <div class="galeria-item" onclick="abrirFoto('${f.id}')">
+        <div class="thumb">
+          <div class="badge-360">360°</div>
+          <div class="spinner-mini"></div>
+          <img data-id="${f.id}" alt="">
+        </div>
+        <div class="info">
+          <div class="nombre">${escapeHtml(f.nombre || '')}</div>
+          <div class="fecha">${fecha}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  // Cargar miniaturas
+  grid.querySelectorAll('img[data-id]').forEach(img => cargarThumbnail(img));
+}
+
+async function cargarThumbnail(img) {
+  const id = img.dataset.id;
+  try {
+    const url = new URL(BACKEND_URL);
+    url.searchParams.set('action', 'getThumbnail');
+    url.searchParams.set('fileId', id);
+    url.searchParams.set('size', 'thumb');
+    
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    
+    const base64 = await res.text();
+    const blob = base64ABlob(base64, 'image/jpeg');
+    img.src = URL.createObjectURL(blob);
+    img.onload = () => {
+      const spinner = img.parentElement.querySelector('.spinner-mini');
+      if (spinner) spinner.style.display = 'none';
+    };
+  } catch (e) {
+    console.error('Error miniatura:', e);
+  }
+}
+
+function abrirFoto(id) {
+  // Mantiene el contexto de galería para que el botón "volver" funcione
+  window.location.href = '?id=' + encodeURIComponent(id);
+}
+
+// ============================================================================
+// UTILIDADES
+// ============================================================================
+
+function base64ABlob(base64, mimeType) {
+  const byteCharacters = atob(base64);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: mimeType });
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/[&<>"']/g, c => 
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])
+  );
+}
+</script>
+</body>
+</html>
