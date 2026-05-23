@@ -126,7 +126,7 @@ body {
 #fileInput { display: none; }
 
 .campo-grupo { margin-bottom: 12px; }
-.campo-grupo label {https://script.google.com/macros/s/AKfycbyi7J4Z4-8r3GuPogcAqM-IKyWb_PiH-h59WvUEXItDoQNIGNX5mE_akCDAUT8um7RQ/exec
+.campo-grupo label {
   display: block;
   font-size: 13px;
   font-weight: 600;
@@ -465,7 +465,7 @@ body {
 // ============================================================================
 // CONFIGURACIÓN — Pega aquí la URL del Apps Script NUEVO que despliegues
 // ============================================================================
-const BACKEND_URL = 'PEGAR_AQUI_URL_DEL_APPS_SCRIPT_NUEVO';
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyi7J4Z4-8r3GuPogcAqM-IKyWb_PiH-h59WvUEXItDoQNIGNX5mE_akCDAUT8um7RQ/exec';
 const VISOR_URL = 'https://joanferibes.github.io/visor-360/';
 
 const ANCHO_OBJETIVO = 4096;
@@ -487,7 +487,7 @@ let viewersActivos = [];
 // INIT
 // ============================================================================
 function init() {
-  if (BACKEND_URL.includes('PEGAR_AQUI')) {
+  if (BACKEND_URL.includes('https://script.google.com/macros/s/AKfycbyi7J4Z4-8r3GuPogcAqM-IKyWb_PiH-h59WvUEXItDoQNIGNX5mE_akCDAUT8um7RQ/exec')) {
     document.getElementById('configBanner').classList.add('visible');
     return;
   }
