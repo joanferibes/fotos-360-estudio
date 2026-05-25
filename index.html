@@ -487,7 +487,7 @@ let viewersActivos = [];
 // INIT
 // ============================================================================
 function init() {
- if (BACKEND_URL.includes('PEGAR_AQUI')) {
+  if (BACKEND_URL.includes('PEGAR_AQUI')) {
     document.getElementById('configBanner').classList.add('visible');
     return;
   }
@@ -987,7 +987,11 @@ async function generarPDFSesion() {
     doc.text('Escanea el QR o pulsa el enlace para ver', margenX + 36, y + 16);
     doc.text('todas las fotos 360° de esta sesión:', margenX + 36, y + 20);
     doc.setTextColor(AZUL[0], AZUL[1], AZUL[2]);
-    doc.textWithLink('▶ Abrir galería 360°', margenX + 36, y + 27, { url: urlGaleria });
+    doc.setTextColor(AZUL[0], AZUL[1], AZUL[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.text('▶ Abrir galería 360°', margenX + 36, y + 27);
+    // Área clicable amplia (no usar textWithLink: trunca URLs largas)
+    doc.link(margenX + 36, y + 23, 60, 6, { url: urlGaleria });
     y += 42;
 
     // ---- Listado de fotos ----
@@ -1027,13 +1031,13 @@ async function generarPDFSesion() {
       doc.setTextColor(AZUL[0], AZUL[1], AZUL[2]);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
-      doc.textWithLink('▶ Ver foto 360°', margenX + 22, y + 14, { url: r.urlVisor });
-      // URL en gris pequeña (recortada si muy larga)
+      doc.text('▶ Ver foto 360°', margenX + 22, y + 14);
+      // Área clicable amplia sobre toda la fila (no usar textWithLink: trunca URLs largas)
+      doc.link(margenX, y, pw - margenX*2, filaH - 3, { url: r.urlVisor });
+      // Texto aclaratorio (NO la URL, que confunde y parece cortada)
       doc.setTextColor(150, 150, 150);
       doc.setFontSize(6.5);
-      let urlCorta = r.urlVisor;
-      if (urlCorta.length > 75) urlCorta = urlCorta.substring(0, 75) + '...';
-      doc.text(urlCorta, margenX + 22, y + 18);
+      doc.text('Escanea el QR o pulsa aquí para abrir la foto', margenX + 22, y + 18);
 
       y += filaH;
     }
